@@ -1,0 +1,106 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+model Atributo {
+    id        String    @id @default(uuid()) @map("_id")
+    nome      String
+    descricao String
+    Pericia   Pericia[]
+}
+
+model Elemento {
+    id        String   @id @default(uuid()) @map("_id")
+    nome      String
+    descricao String
+    Ritual    Ritual[]
+}
+
+model Pericia {
+    id                String   @id @default(uuid()) @map("_id")
+    nome              String   @unique
+    idAtributo        String
+    atributo          Atributo @relation(fields: [idAtributo], references: [id])
+    somenteTreinada   Boolean
+    penalidadeDeCarga Boolean
+    precisaDeKit      Boolean
+
+    Origens Origem[]
+
+    idclasse String?
+    idClasse String?
+    Classe   Classe? @relation(fields: [idClasse], references: [id])
+}
+
+model Origem {
+    id                String    @id @default(uuid()) @map("_id")
+    nome              String
+    periciasTreinadas Pericia[]
+    poder             String
+}
+
+model Classe {
+    id                      String       @id @default(uuid()) @map("_id")
+    nome                    String
+    pontosDeVidaIniciais    String
+    pontosDeVidaPorNivel    String
+    pontosDeEsforcoIniciais String
+    pontosDeEsforcoPorNivel String
+    sanidadeInicial         Int
+    sanidadePorNivel        Int
+    periciasTreinadas       Pericia[]
+    trilhas                 Trilha[]
+    habilidades             Habilidade[]
+}
+
+model Trilha {
+    id          String       @id @default(uuid()) @map("_id")
+    nome        String       @unique
+    descricao   String
+    Classe      Classe?      @relation(fields: [classeId], references: [id])
+    classeId    String?
+    habilidades Habilidade[]
+}
+
+model Habilidade {
+    id        String  @id @default(uuid()) @map("_id")
+    nome      String  @unique
+    descricao String
+    nivelNex  Int
+    Trilha    Trilha? @relation(fields: [trilhaId], references: [id])
+    trilhaId  String?
+    Classe    Classe? @relation(fields: [classeId], references: [id])
+    classeId  String?
+}
+
+model Ritual {
+    id              String          @id @default(uuid()) @map("_id")
+    nome            String
+    elemento        Elemento        @relation(fields: [elementoId], references: [id])
+    elementoId      String
+    circulo         Int
+    execucao        String
+    alcanse         String
+    alvo            String
+    duracao         String
+    descricao       String
+    descricaoBreve  String
+    formasAvancadas String
+    FormasAvancadas FormaAvancada[]
+}
+
+model FormaAvancada {
+    id        String  @id @default(uuid()) @map("_id")
+    nome      String  @unique
+    custoPE   Int
+    descricao String
+    Ritual    Ritual? @relation(fields: [ritualId], references: [id])
+    ritualId  String?
+    requisito String
+}
