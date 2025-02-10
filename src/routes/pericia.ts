@@ -1,12 +1,18 @@
 import { Pericia } from "@prisma/client";
 import { Router } from "express";
-import { formatData, normalizeStrng } from "helpers/formatData.js";
+import { removeIds, normalizeStrng } from "helpers/formaters.js";
+import { paginate } from "helpers/pagination.js";
 import { db } from "lib/db.js";
 
 const periciaRouter = Router();
 
 periciaRouter.get("/", async (req, res) => {
     try {
+        const paginationLimit = Number(req.query.limit);
+        const paginationOffset = Number(req.query.offset);
+
+        const { atributo } = req.query;
+
         const response = (await db.pericia.findMany({
             orderBy: {
                 nome: "asc",
@@ -16,8 +22,45 @@ periciaRouter.get("/", async (req, res) => {
             },
         })) as Pericia[];
 
-        const pericias = formatData(response);
+        if (!response) {
+            res.status(500).json({ message: "Erro ao buscar dados" });
+            return;
+        }
 
+        let resultados = response;
+
+        if (atributo) {
+            //! Arrumar aqui o filtro
+
+            const normalizedAtributo = normalizeStrng(atributo as string);
+            resultados = resultados.filter(
+                (pericia) =>
+                    normalizeStrng(pericia.atributo.nome) === normalizedAtributo
+            );
+
+            if (!resultados) {
+                res.status(404).json({
+                    message: "Não foi encontrado pericias com esse atributo",
+                });
+                return;
+            }
+        }
+
+        if (paginationLimit && paginationLimit < resultados.length) {
+            //* Ajustar o retorno para voltar o filtro também
+
+            const pericias = paginate(
+                resultados,
+                "pericia",
+                paginationLimit,
+                paginationOffset || 0
+            );
+
+            res.status(200).json(pericias);
+            return;
+        }
+
+        const pericias = removeIds(resultados);
         res.status(200).json(pericias);
     } catch (error) {
         res.status(500).json({ message: "Erro ao buscar dados" });
@@ -49,7 +92,7 @@ periciaRouter.get("/:nome", async (req, res) => {
             return;
         }
 
-        const pericia = formatData(periciaEncontrada);
+        const pericia = removeIds(periciaEncontrada);
 
         res.status(200).json(pericia);
     } catch (error) {

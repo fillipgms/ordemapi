@@ -1,6 +1,6 @@
-export function formatData(data: any): any {
+export function removeIds(data: any): any {
     if (Array.isArray(data)) {
-        return data.map((obj) => formatData(obj));
+        return data.map((obj) => removeIds(obj));
     }
 
     const newObj: any = {};
@@ -9,7 +9,7 @@ export function formatData(data: any): any {
         if (data.hasOwnProperty(key)) {
             if (!/^id/i.test(key)) {
                 if (typeof data[key] === "object" && data[key] !== null) {
-                    newObj[key] = formatData(data[key]);
+                    newObj[key] = removeIds(data[key]);
                 } else {
                     newObj[key] = data[key];
                 }

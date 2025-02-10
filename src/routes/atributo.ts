@@ -1,11 +1,15 @@
 import { Atributo } from "@prisma/client";
 import { Request, Response, Router } from "express";
-import { formatData, normalizeStrng } from "helpers/formatData.js";
+import { removeIds, normalizeStrng } from "helpers/formaters.js";
+import { paginate } from "helpers/pagination.js";
 import { db } from "lib/db.js";
 
 const atributoRouter = Router();
 
 atributoRouter.get("/", async (req: Request, res: Response) => {
+    const paginationLimit = Number(req.query.limit);
+    const paginationOffset = Number(req.query.offset);
+
     try {
         const response = (await db.atributo.findMany({
             orderBy: {
@@ -13,7 +17,24 @@ atributoRouter.get("/", async (req: Request, res: Response) => {
             },
         })) as Atributo[];
 
-        const atributos = formatData(response);
+        if (!response) {
+            res.status(500).json({ message: "Erro ao buscar dados" });
+            return;
+        }
+
+        if (paginationLimit && paginationLimit < response.length) {
+            const atributos = paginate(
+                response,
+                "atributo",
+                paginationLimit,
+                paginationOffset || 0
+            );
+
+            res.status(200).json(atributos);
+            return;
+        }
+
+        const atributos = removeIds(response);
 
         res.status(200).json(atributos);
     } catch (error) {
@@ -42,7 +63,7 @@ atributoRouter.get("/:nome", async (req: Request, res: Response) => {
             return;
         }
 
-        const atributo = formatData(atributoEncontrado);
+        const atributo = removeIds(atributoEncontrado);
 
         res.status(200).json(atributo);
     } catch (error) {
