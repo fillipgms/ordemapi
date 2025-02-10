@@ -1,25 +1,29 @@
-export function formatArray(data: any[]) {
-    return data.map((object) => {
-        let formatedObj: any = {};
+export function formatData(data: any): any {
+    if (Array.isArray(data)) {
+        return data.map((obj) => formatData(obj));
+    }
 
-        for (const key in object) {
-            if (!key.startsWith("id")) {
-                formatedObj[key] = object[key];
-            }
-        }
-
-        return formatedObj;
-    });
-}
-
-export function formatObject(data: any) {
-    let formatedObj: any = {};
+    const newObj: any = {};
 
     for (const key in data) {
-        if (!key.startsWith("id")) {
-            formatedObj[key] = data[key];
+        if (data.hasOwnProperty(key)) {
+            if (!/^id/i.test(key)) {
+                if (typeof data[key] === "object" && data[key] !== null) {
+                    newObj[key] = formatData(data[key]);
+                } else {
+                    newObj[key] = data[key];
+                }
+            }
         }
     }
 
-    return formatedObj;
+    return newObj;
+}
+
+export function normalizeStrng(str: string): string {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, "");
 }
