@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import express from "express";
 const app = express();
 const port = process.env.PORT || 5500;
-const url = process.env.BASE_URL || 5500;
+const url = process.env.BASE_URL;
 
 import atributoRouter from "routes/atributos.js";
 import origemRouter from "routes/origens.js";

@@ -55,7 +55,21 @@ origemRouter.get("/", async (req: Request, res: Response) => {
             return;
         }
 
-        const origensWithoutIds = removeIds(response);
+        let resultados = response;
+
+        if (filters.pericia) {
+            const normalizedPericias = (filters.pericia as string)
+                .split(",")
+                .map((pericia) => normalizeStrng(pericia.trim()));
+
+            resultados = resultados.filter((origem) =>
+                origem.periciasTreinadas.some((pericia) =>
+                    normalizedPericias.includes(normalizeStrng(pericia.nome))
+                )
+            );
+        }
+
+        const origensWithoutIds = removeIds(resultados);
 
         const origens = origensWithoutIds.map(
             (origem: models.OrigemWithPericias) => {
@@ -81,6 +95,50 @@ origemRouter.get("/", async (req: Request, res: Response) => {
         }
 
         res.status(200).json(origens);
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao buscar dados" });
+    }
+});
+
+origemRouter.get("/:nome", async (req: Request, res: Response) => {
+    try {
+        const nome = req.params.nome;
+        const normalizedName = normalizeStrng(nome);
+
+        const response = await db.origem.findMany({
+            include: {
+                periciasTreinadas: {
+                    include: {
+                        atributo: true,
+                    },
+                },
+            },
+        });
+
+        if (!response) {
+            res.status(500).json({ message: "Erro ao buscar dados" });
+            return;
+        }
+
+        const origemEncontrada = response.find(
+            (origem) => normalizeStrng(origem.nome) === normalizedName
+        );
+
+        if (!origemEncontrada) {
+            res.status(404).json({ message: "Origem não encontrada" });
+            return;
+        }
+
+        const origemWithoutIds = removeIds(origemEncontrada);
+
+        const origem = {
+            ...origemWithoutIds,
+            periciasTreinadas: summarizePericias(
+                origemWithoutIds.periciasTreinadas
+            ),
+        };
+
+        res.status(200).json(origem);
     } catch (error) {
         res.status(500).json({ message: "Erro ao buscar dados" });
     }
