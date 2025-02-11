@@ -1,7 +1,8 @@
-import { Pericia } from "@prisma/client";
+import { Pericia, Prisma } from "@prisma/client";
 import { Router } from "express";
 import { removeIds, normalizeStrng } from "helpers/formaters.js";
 import { paginate } from "helpers/pagination.js";
+import { models } from "interfaces/index.js";
 import { db } from "lib/db.js";
 
 const periciaRouter = Router();
@@ -11,7 +12,15 @@ periciaRouter.get("/", async (req, res) => {
         const paginationLimit = Number(req.query.limit);
         const paginationOffset = Number(req.query.offset);
 
-        const { atributo } = req.query;
+        const filters = Object.entries(req.query).reduce(
+            (acc, [key, value]) => {
+                if (key !== "limit" && key !== "offset" && value) {
+                    acc[key] = value as string;
+                }
+                return acc;
+            },
+            {} as Record<string, string>
+        );
 
         const response = (await db.pericia.findMany({
             orderBy: {
@@ -20,7 +29,7 @@ periciaRouter.get("/", async (req, res) => {
             include: {
                 atributo: true,
             },
-        })) as Pericia[];
+        })) as models.PericiaWithAtributo[];
 
         if (!response) {
             res.status(500).json({ message: "Erro ao buscar dados" });
@@ -29,10 +38,10 @@ periciaRouter.get("/", async (req, res) => {
 
         let resultados = response;
 
-        if (atributo) {
-            //! Arrumar aqui o filtro
-
-            const normalizedAtributo = normalizeStrng(atributo as string);
+        if (filters.atributo) {
+            const normalizedAtributo = normalizeStrng(
+                filters.atributo as string
+            );
             resultados = resultados.filter(
                 (pericia) =>
                     normalizeStrng(pericia.atributo.nome) === normalizedAtributo
@@ -47,13 +56,12 @@ periciaRouter.get("/", async (req, res) => {
         }
 
         if (paginationLimit && paginationLimit < resultados.length) {
-            //* Ajustar o retorno para voltar o filtro também
-
             const pericias = paginate(
                 resultados,
-                "pericia",
+                "pericias",
                 paginationLimit,
-                paginationOffset || 0
+                paginationOffset || 0,
+                filters
             );
 
             res.status(200).json(pericias);

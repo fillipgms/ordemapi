@@ -25,7 +25,7 @@ atributoRouter.get("/", async (req: Request, res: Response) => {
         if (paginationLimit && paginationLimit < response.length) {
             const atributos = paginate(
                 response,
-                "atributo",
+                "atributos",
                 paginationLimit,
                 paginationOffset || 0
             );
