@@ -10,4 +10,20 @@ declare namespace models {
     type OrigemWithPericias = Origem & {
         periciasTreinadas: PericiaWithAtributo[];
     };
+
+    type fullClasse = Prisma.ClasseGetPayload<{
+        include: {
+            trilhas: true;
+            habilidades: true;
+            PerciasOptaveis: {
+                include: {
+                    Pericia: {
+                        include: {
+                            atributo: true;
+                        };
+                    };
+                };
+            };
+        };
+    }>;
 }

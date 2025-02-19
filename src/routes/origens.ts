@@ -1,26 +1,11 @@
 import { Request, Response, Router } from "express";
 import { normalizeStrng, removeIds } from "helpers/formaters.js";
 import { paginate } from "helpers/pagination.js";
+import summarizePericias from "helpers/summarizePericias.js";
 import { models } from "interfaces/index.js";
 import { db } from "lib/db.js";
 
 const origemRouter = Router();
-
-type SumarizedPericia = {
-    nome: string;
-    atributo: string;
-    url: string;
-};
-
-function summarizePericias(
-    pericias: models.PericiaWithAtributo[]
-): SumarizedPericia[] {
-    return pericias.map((pericia) => ({
-        nome: pericia.nome,
-        atributo: pericia.atributo.nome,
-        url: `${process.env.BASE_URL}/pericias/${normalizeStrng(pericia.nome)}`,
-    }));
-}
 
 origemRouter.get("/", async (req: Request, res: Response) => {
     try {

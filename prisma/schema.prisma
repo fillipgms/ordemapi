@@ -10,14 +10,14 @@ datasource db {
 
 model Atributo {
     id        String    @id @default(uuid()) @map("_id")
-    nome      String
+    nome      String    @unique
     descricao String
     Pericia   Pericia[]
 }
 
 model Elemento {
     id        String   @id @default(uuid()) @map("_id")
-    nome      String
+    nome      String   @unique
     descricao String
     Ritual    Ritual[]
 }
@@ -36,27 +36,38 @@ model Pericia {
     idclasse String?
     idClasse String?
     Classe   Classe? @relation(fields: [idClasse], references: [id])
+
+    PerciasOptaveis   PerciasOptaveis? @relation(fields: [perciasOptaveisId], references: [id])
+    perciasOptaveisId String?
 }
 
 model Origem {
     id                String    @id @default(uuid()) @map("_id")
-    nome              String
+    nome              String    @unique
     periciasTreinadas Pericia[]
     poder             String
 }
 
 model Classe {
-    id                      String       @id @default(uuid()) @map("_id")
-    nome                    String
+    id                      String            @id @default(uuid()) @map("_id")
+    nome                    String            @unique
     pontosDeVidaIniciais    String
     pontosDeVidaPorNivel    String
     pontosDeEsforcoIniciais String
     pontosDeEsforcoPorNivel String
     sanidadeInicial         Int
     sanidadePorNivel        Int
-    periciasTreinadas       Pericia[]
     trilhas                 Trilha[]
     habilidades             Habilidade[]
+    Pericia                 Pericia[]
+    PerciasOptaveis         PerciasOptaveis[]
+}
+
+model PerciasOptaveis {
+    id       String    @id @default(uuid()) @map("_id")
+    Classe   Classe?   @relation(fields: [classeId], references: [id])
+    classeId String?
+    Pericia  Pericia[]
 }
 
 model Trilha {
